@@ -7,7 +7,6 @@ dependencies = ["torch", "transformers>=4.57.0", "accelerate", "pillow", "numpy"
 
 [project.urls]
 Repository = "https://github.com/adambarbato/ComfyUI-Sa2VA"
-#  Used by Comfy Registry https://comfyregistry.org
 
 [project.optional-dependencies]
 quantization = ["bitsandbytes"]
@@ -16,4 +15,4 @@ flash_attn = ["flash-attn"]
 [tool.comfy]
 PublisherId = "adambarbato"
 DisplayName = "Sa2VA Segmentation"
-Icon = "🎯"  # Target emoji representing segmentation
+Icon = ""
