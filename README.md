@@ -16,7 +16,7 @@ download https://huggingface.co/nicehero/Sa2VA-Qwen3-VL-4B-fp8 to ComfyUI/custom
   - tokenizer_config.json
   - video_preprocessor_config.json
   - vocab.json
-
+![](https://raw.githubusercontent.com/nicehero/ComfyUI-Sa2VA-fp8/refs/heads/main/docs/fp8.png)
 # ComfyUI Sa2VA
 
 ## Overview
