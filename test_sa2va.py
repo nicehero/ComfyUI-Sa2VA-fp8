@@ -22,6 +22,7 @@ except ImportError as e:
     print(f"❌ Failed to import Sa2VA node: {e}")
     sys.exit(1)
 
+model_name = "MySa2VA-Qwen3-VL-4B"
 
 def create_test_image():
     """Create a simple test image for testing."""
@@ -56,12 +57,12 @@ def test_sa2va_text_only():
 
         # Test text-only generation (now always in segmentation mode)
         text_outputs, masks, mask_images = sa2va_node.process_with_sa2va(
-            model_name="ByteDance/Sa2VA-Qwen3-VL-4B",
+            model_name=model_name,
             image=image_batch[0][0],  # Pass single image instead of batch
             mask_threshold=0.5,
             segmentation_prompt="Please describe this image.",
             use_8bit_quantization=False,
-            use_flash_attn=True,
+            use_flash_attn=False,
         )
 
         print(f"✅ Text generation successful!")
@@ -93,7 +94,7 @@ def test_sa2va_segmentation():
 
         # Test segmentation generation
         text_outputs, masks, mask_images = sa2va_node.process_with_sa2va(
-            model_name="ByteDance/Sa2VA-Qwen3-VL-4B",
+            model_name=model_name,
             image=image_batch[0][0],  # Pass single image instead of batch
             mask_threshold=0.5,
             segmentation_prompt="Please provide segmentation masks for all objects in this image.",
@@ -163,7 +164,7 @@ def test_video_mode():
         # Test video processing (Note: video mode requires special handling)
         # For now, test with single frame as video mode needs frame sequences
         text_outputs, masks, mask_images = sa2va_node.process_with_sa2va(
-            model_name="ByteDance/Sa2VA-Qwen3-VL-4B",
+            model_name=model_name,
             image=test_frames[0],  # Use first frame
             mask_threshold=0.5,
             segmentation_prompt="Please describe what happens in this video sequence.",
@@ -192,7 +193,7 @@ def test_model_loading():
         # Test initial model loading
         print("   Loading model for first time...")
         success1 = sa2va_node.load_model(
-            "ByteDance/Sa2VA-Qwen3-VL-4B", use_flash_attn=True, dtype="auto"
+            model_name, use_flash_attn=True, dtype="auto"
         )
 
         if not success1:
@@ -204,7 +205,7 @@ def test_model_loading():
         # Test cached model loading
         print("   Testing model cache...")
         success2 = sa2va_node.load_model(
-            "ByteDance/Sa2VA-Qwen3-VL-4B", use_flash_attn=True, dtype="auto"
+            model_name, use_flash_attn=True, dtype="auto"
         )
 
         if not success2:
@@ -238,11 +239,12 @@ def main():
 
     test_results = []
 
+    # Test 2: Text Generation
+    test_results.append(("Text Generation", test_sa2va_text_only()))
+
     # Test 1: Model Loading
     test_results.append(("Model Loading", test_model_loading()))
 
-    # Test 2: Text Generation
-    test_results.append(("Text Generation", test_sa2va_text_only()))
 
     # Test 3: Segmentation
     segmentation_success, masks = test_sa2va_segmentation()
