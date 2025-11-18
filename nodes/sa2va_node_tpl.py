@@ -10,8 +10,8 @@ import threading
 import time
 from contextlib import nullcontext
 from PIL import Image
-from .. import be_quiet  # Import global config from root __init__.py
-
+#from .. import be_quiet  # Import global config from root __init__.py
+be_quiet = False
 
 class Sa2VANodeTpl:
     def __init__(self):
@@ -32,6 +32,7 @@ class Sa2VANodeTpl:
                         "ByteDance/Sa2VA-Qwen2_5-VL-3B",
                         "ByteDance/Sa2VA-Qwen2_5-VL-7B",
                         "ByteDance/Sa2VA-Qwen3-VL-4B",
+                        "MySa2VA-Qwen3-VL-4B",
                     ],
                     {"default": "ByteDance/Sa2VA-Qwen3-VL-4B"},
                 ),
@@ -303,88 +304,103 @@ class Sa2VANodeTpl:
                             return False
 
                 # Enhanced download with cancellable snapshot_download and repo size summary
-                try:
-                    from huggingface_hub import HfApi, snapshot_download
-                    from huggingface_hub.utils import tqdm as hub_tqdm
-
-                    # Print repo size summary to set expectations
+                if model_name != "MySa2VA-Qwen3-VL-4B":
                     try:
-                        api = HfApi()
-                        info = api.repo_info(
-                            model_name, repo_type="model", files_metadata=True
-                        )
-                        sizes = []
-                        file_entries = []
-                        for s in getattr(info, "siblings", []):
-                            sz = getattr(s, "size", None)
-                            if sz is None:
-                                lfs = getattr(s, "lfs", None)
-                                sz = (
-                                    getattr(lfs, "size", None)
-                                    if lfs is not None
-                                    else None
-                                )
-                            if isinstance(sz, int) and sz > 0:
-                                sizes.append(sz)
-                                file_entries.append(
-                                    (
-                                        getattr(
-                                            s, "rfilename", getattr(s, "path", "file")
-                                        ),
-                                        sz,
-                                    )
-                                )
-                        total_bytes = sum(sizes)
-                        if total_bytes > 0:
-                            gb = total_bytes / (1024**3)
-                            print(
-                                f"   Estimated total download size: {gb:.2f} GB across {len(sizes)} files"
+                        from huggingface_hub import HfApi, snapshot_download
+                        from huggingface_hub.utils import tqdm as hub_tqdm
+
+                        # Print repo size summary to set expectations
+                        try:
+                            api = HfApi()
+                            info = api.repo_info(
+                                model_name, repo_type="model", files_metadata=True
                             )
-                            largest = sorted(
-                                file_entries, key=lambda x: x[1], reverse=True
-                            )[:5]
-                            if largest:
-                                print("   Largest files:")
-                                for name, sz in largest:
-                                    print(f"     • {name}: {sz / (1024**2):.1f} MB")
+                            sizes = []
+                            file_entries = []
+                            for s in getattr(info, "siblings", []):
+                                sz = getattr(s, "size", None)
+                                if sz is None:
+                                    lfs = getattr(s, "lfs", None)
+                                    sz = (
+                                        getattr(lfs, "size", None)
+                                        if lfs is not None
+                                        else None
+                                    )
+                                if isinstance(sz, int) and sz > 0:
+                                    sizes.append(sz)
+                                    file_entries.append(
+                                        (
+                                            getattr(
+                                                s, "rfilename", getattr(s, "path", "file")
+                                            ),
+                                            sz,
+                                        )
+                                    )
+                            total_bytes = sum(sizes)
+                            if total_bytes > 0:
+                                gb = total_bytes / (1024**3)
+                                print(
+                                    f"   Estimated total download size: {gb:.2f} GB across {len(sizes)} files"
+                                )
+                                largest = sorted(
+                                    file_entries, key=lambda x: x[1], reverse=True
+                                )[:5]
+                                if largest:
+                                    print("   Largest files:")
+                                    for name, sz in largest:
+                                        print(f"     • {name}: {sz / (1024**2):.1f} MB")
+                        except Exception as e:
+                            if not be_quiet:
+                                print(f"   Could not determine repo size: {e}")
+
+                        class CancellableTqdm(hub_tqdm):
+                            def update(self, n=1):
+                                if is_cancelled():
+                                    raise KeyboardInterrupt("Download cancelled by user")
+                                return super().update(n)
+
+                        model_kwargs_local = dict(model_kwargs)
+                        model_kwargs_local["local_files_only"] = True
+                        model_kwargs_local.pop("cache_dir", None)
+                        local_dir = snapshot_download(
+                            repo_id=model_name,
+                            cache_dir=effective_cache_dir if effective_cache_dir else None,
+                            resume_download=True,
+                            local_files_only=False,
+                            tqdm_class=CancellableTqdm,
+                        )
+
+                        # Load the model from the local directory to avoid extra network calls
+
+                        self.model = AutoModel.from_pretrained(
+                            local_dir, **model_kwargs_local
+                        ).eval()
+                        print("✅ Model files downloaded and loaded from cache")
+
+                    except KeyboardInterrupt:
+                        print("\n⚠️ Model download was cancelled")
+                        return False
                     except Exception as e:
                         if not be_quiet:
-                            print(f"   Could not determine repo size: {e}")
-
-                    class CancellableTqdm(hub_tqdm):
-                        def update(self, n=1):
-                            if is_cancelled():
-                                raise KeyboardInterrupt("Download cancelled by user")
-                            return super().update(n)
-
-                    local_dir = snapshot_download(
-                        repo_id=model_name,
-                        cache_dir=effective_cache_dir if effective_cache_dir else None,
-                        resume_download=True,
-                        local_files_only=False,
-                        tqdm_class=CancellableTqdm,
+                            print(f"   Enhanced download failed: {e}")
+                            print("   Using standard download...")
+                        self.model = AutoModel.from_pretrained(
+                            model_name, **model_kwargs
+                        ).eval()
+                else:
+                    current_dir = os.path.dirname(
+                        os.path.dirname(os.path.abspath(__file__))
                     )
-
-                    # Load the model from the local directory to avoid extra network calls
+                    local_dir = os.path.join(
+                        current_dir, "Sa2VA_model"
+                    )
                     model_kwargs_local = dict(model_kwargs)
                     model_kwargs_local["local_files_only"] = True
                     model_kwargs_local.pop("cache_dir", None)
                     self.model = AutoModel.from_pretrained(
                         local_dir, **model_kwargs_local
                     ).eval()
-                    print("✅ Model files downloaded and loaded from cache")
-
-                except KeyboardInterrupt:
-                    print("\n⚠️ Model download was cancelled")
-                    return False
-                except Exception as e:
-                    if not be_quiet:
-                        print(f"   Enhanced download failed: {e}")
-                        print("   Using standard download...")
-                    self.model = AutoModel.from_pretrained(
-                        model_name, **model_kwargs
-                    ).eval()
-
+                    print("✅ MyModel files loaded from cache")
                 # Place model on the appropriate device and dtype for lower memory
                 target_device = (
                     torch.device("cuda")
@@ -430,8 +446,8 @@ class Sa2VANodeTpl:
 
                 # Load processor (from local_dir if available to avoid refetch)
                 processor_kwargs = {"trust_remote_code": True, "use_fast": False}
-                if effective_cache_dir:
-                    processor_kwargs["cache_dir"] = effective_cache_dir
+                #if effective_cache_dir:
+                #    processor_kwargs["cache_dir"] = effective_cache_dir
 
                 processor_source = local_dir if "local_dir" in locals() else model_name
                 self.processor = AutoProcessor.from_pretrained(
@@ -480,10 +496,10 @@ class Sa2VANodeTpl:
                 processor_kwargs = {"trust_remote_code": True, "use_fast": False}
                 if effective_cache_dir:
                     processor_kwargs["cache_dir"] = effective_cache_dir
-
-                self.processor = AutoProcessor.from_pretrained(
-                    model_name, **processor_kwargs
-                )
+                if self.processor is None:
+                    self.processor = AutoProcessor.from_pretrained(
+                        model_name, **processor_kwargs
+                    )
 
                 self.current_model_name = model_name
 
