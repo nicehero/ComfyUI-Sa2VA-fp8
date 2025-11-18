@@ -34,7 +34,7 @@ class Sa2VANodeTpl:
                         "ByteDance/Sa2VA-Qwen3-VL-4B",
                         "MySa2VA-Qwen3-VL-4B",
                     ],
-                    {"default": "ByteDance/Sa2VA-Qwen3-VL-4B"},
+                    {"default": "MySa2VA-Qwen3-VL-4B"},
                 ),
                 "image": ("IMAGE",),  # Regular ComfyUI image input
                 "mask_threshold": (
