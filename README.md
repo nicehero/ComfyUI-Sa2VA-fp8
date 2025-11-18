@@ -1,22 +1,21 @@
 ### use fp8
 download https://huggingface.co/nicehero/Sa2VA-Qwen3-VL-4B-fp8 to ComfyUI/custom_nodes/Sa2VA-Qwen3-VL-4B-fp8/Sa2VA_model
-Sa2VA_model
-
-- added_tokens.json
-- chat_template.jinja
-- config.json
-- configuration_sa2va_chat.py
-- merges.txt
-- model.safetensors
-- modeling_sa2va_qwen.py
-- preprocessor_config.json
-- sam2.py
-- special_tokens_map.json
-- templates.py
-- tokenizer.json
-- tokenizer_config.json
-- video_preprocessor_config.json
-- vocab.json
+- Sa2VA_model
+  - added_tokens.json
+  - chat_template.jinja
+  - config.json
+  - configuration_sa2va_chat.py
+  - merges.txt
+  - model.safetensors
+  - modeling_sa2va_qwen.py
+  - preprocessor_config.json
+  - sam2.py
+  - special_tokens_map.json
+  - templates.py
+  - tokenizer.json
+  - tokenizer_config.json
+  - video_preprocessor_config.json
+  - vocab.json
 
 # ComfyUI Sa2VA
 
