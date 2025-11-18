@@ -1,8 +1,8 @@
 {
   "id": "8725b6f8-c718-4a94-8441-dcd0103073d0",
   "revision": 0,
-  "last_node_id": 4,
-  "last_link_id": 3,
+  "last_node_id": 5,
+  "last_link_id": 4,
   "nodes": [
     {
       "id": 1,
@@ -63,7 +63,7 @@
         246
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -87,45 +87,6 @@
       "widgets_values": [],
       "color": "#322",
       "bgcolor": "#533"
-    },
-    {
-      "id": 4,
-      "type": "SaveImage",
-      "pos": [
-        950,
-        350
-      ],
-      "size": [
-        250,
-        270
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 3
-        }
-      ],
-      "outputs": [],
-      "title": "Save Masks",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.61",
-        "Node name for S&R": "SaveImage",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.1",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "sa2va_masks"
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
     },
     {
       "id": 2,
@@ -153,7 +114,9 @@
           "name": "text_outputs",
           "type": "LIST",
           "slot_index": 0,
-          "links": []
+          "links": [
+            4
+          ]
         },
         {
           "name": "masks",
@@ -190,6 +153,74 @@
       ],
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "SaveImage",
+      "pos": [
+        950,
+        350
+      ],
+      "size": [
+        250,
+        270
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [],
+      "title": "Save Masks",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.61",
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "sa2va_masks"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 5,
+      "type": "PreviewAny",
+      "pos": [
+        1269.9479166666654,
+        -9.50520833333334
+      ],
+      "size": [
+        140,
+        76
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 4
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": []
     }
   ],
   "links": [
@@ -216,6 +247,14 @@
       4,
       0,
       "IMAGE"
+    ],
+    [
+      4,
+      2,
+      0,
+      5,
+      0,
+      "*"
     ]
   ],
   "groups": [],
